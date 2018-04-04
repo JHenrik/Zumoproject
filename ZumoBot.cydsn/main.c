@@ -64,7 +64,10 @@ int main()
 
     int16 adcresult =0;
     float volts = 0.0;
-
+    const float batteryVoltage = 1.5;
+    const int VinRange = 5;
+    const int codeRange = 4095;
+    
     printf("\nBoot\n");
 
     //BatteryLed_Write(1); // Switch led on 
@@ -82,6 +85,7 @@ int main()
             adcresult = ADC_Battery_GetResult16(); // get the ADC value (0 - 4095)
             // convert value to Volts
             // you need to implement the conversion
+            volts = ((float)(adcresult * VinRange) / codeRange) * batteryVoltage;
             
             // Print both ADC results and converted value
             printf("%d %f\r\n",adcresult, volts);
