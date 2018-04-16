@@ -42,6 +42,7 @@
 #include "IR.h"
 #include "Ambient.h"
 #include "Beep.h"
+#include "Tune.h"
 #include <time.h>
 #include <sys/time.h>
 int rread(void);
@@ -51,6 +52,20 @@ int rread(void);
  * @brief   
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
+
+/*Definitions*/
+
+#define minSpeed 0
+#define maxSpeed 255
+float constSpeed(float speed, int min, int max);
+
+void startTune()
+{
+    
+    Tune(140,153);
+    CyDelay(10);
+    
+}
 
 #if 1
 //battery level//
@@ -77,6 +92,8 @@ int main()
     // SW1_Read() returns zero when button is pressed
     // SW1_Read() returns one when button is not pressed
 
+    /*1. Battery check*/
+    
     for(;;)
     {
         
@@ -89,10 +106,39 @@ int main()
             
             // Print both ADC results and converted value
             printf("%d %f\r\n",adcresult, volts);
+            
+            /*2. Play a Tune*/            
+            //startTune();
         }
         CyDelay(500);
         
     }
+    
+    
+    
+    
+    /*3. Motor Check*/
+    
+    //Right motor speed
+    
+    
+    //Left motor speed
+    
+    
+    //Straight line forward movement
+    
+    
+    /*4. Complete a course without sensors*/
+    
+    
+    /*5. Sensor values check*/
+    
+    
+    /*6. Motion based on sensor values*/
+    
+    
+    /*7. Automated PID line follower*/
+    
  }   
 #endif
 
