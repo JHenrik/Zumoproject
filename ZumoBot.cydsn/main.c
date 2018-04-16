@@ -53,7 +53,6 @@ int rread(void);
  * @brief   
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
-<<<<<<< HEAD
 
 /*Definitions*/
 
@@ -69,9 +68,9 @@ void startTune()
     
 }
 
-=======
+
 int sens();
->>>>>>> 53b90c4ba6739384bc848b1954994e278b4e5356
+
 #if 1
 //battery level//
 int main()
@@ -148,10 +147,9 @@ int main()
         
         motor_stop();*/
 
-<<<<<<< HEAD
+
     /*1. Battery check*/
-=======
->>>>>>> 53b90c4ba6739384bc848b1954994e278b4e5356
+
     
     for(;;)
     {
