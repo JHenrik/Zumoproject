@@ -44,6 +44,7 @@
 #include "Beep.h"
 #include <time.h>
 #include <sys/time.h>
+#include <stdbool.h>
 int rread(void);
 
 /**
@@ -51,11 +52,12 @@ int rread(void);
  * @brief   
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
-
+int sens();
 #if 1
 //battery level//
 int main()
 {
+    
     CyGlobalIntEnable; 
     UART_1_Start();
     Systick_Start();
@@ -68,18 +70,69 @@ int main()
     const int VinRange = 5;
     const int codeRange = 4095;
     
+        if(volts <4)
+       {
+          BatteryLed_Write(1);
+       }
+       else
+       {
+            BatteryLed_Write(0);
+       }
+    
     printf("\nBoot\n");
 
     //BatteryLed_Write(1); // Switch led on 
-    BatteryLed_Write(0); // Switch led off 
+    //BatteryLed_Write(0); // Switch led off 
     //uint8 button;
     //button = SW1_Read(); // read SW1 on pSoC board
     // SW1_Read() returns zero when button is pressed
     // SW1_Read() returns one when button is not pressed
+    
+    /*motor_start();
+        motor_forward(200,1500);
+        
+        MotorDirLeft_Write(0);      // set LeftMotor forward mode
+        MotorDirRight_Write(1);     // set RightMotor forward mode
+        PWM_WriteCompare1(100); 
+        PWM_WriteCompare2(100); 
+        CyDelay(750);
+        
+        motor_forward(200,1250);
+        
+        MotorDirLeft_Write(0);      // set LeftMotor forward mode
+        MotorDirRight_Write(1);     // set RightMotor forward mode
+        PWM_WriteCompare1(100); 
+        PWM_WriteCompare2(100); 
+        CyDelay(720);
+       
+        motor_forward(200,1400);
+        
+        MotorDirLeft_Write(0);      // set LeftMotor forward mode
+        MotorDirRight_Write(1);     // set RightMotor forward mode
+        PWM_WriteCompare1(100); 
+        PWM_WriteCompare2(100); 
+        CyDelay(900);
+        
+        motor_forward(200,400);
+        
+        MotorDirLeft_Write(0);      // set LeftMotor forward mode
+        MotorDirRight_Write(0);     // set RightMotor forward mode
+        PWM_WriteCompare1(120); 
+        PWM_WriteCompare2(55); 
+        CyDelay(2500);
+        
+        motor_forward(200,500);
+        
+        
+//        
+//        motor_forward(100,1000);
+        
+        motor_stop();*/
 
+    
     for(;;)
     {
-        
+        sens();
         ADC_Battery_StartConvert();
         if(ADC_Battery_IsEndConversion(ADC_Battery_WAIT_FOR_RESULT)) {   // wait for get ADC converted value
             adcresult = ADC_Battery_GetResult16(); // get the ADC value (0 - 4095)
@@ -87,11 +140,11 @@ int main()
             // you need to implement the conversion
             volts = ((float)(adcresult * VinRange) / codeRange) * batteryVoltage;
             
+          return volts;
             // Print both ADC results and converted value
             printf("%d %f\r\n",adcresult, volts);
         }
         CyDelay(500);
-        
     }
  }   
 #endif
@@ -135,7 +188,7 @@ int main()
 
 #if 0
 //ultrasonic sensor//
-int main()
+int main1()
 {
     CyGlobalIntEnable; 
     UART_1_Start();
@@ -184,12 +237,16 @@ int main()
 #endif
 
 
-#if 0
+#if 1
 //reflectance//
-int main()
+int sens()
 {
+    //int speed = 225;
+    bool BL = true;
     struct sensors_ ref;
     struct sensors_ dig;
+    //int blackline = 10000;
+    
 
     Systick_Start();
 
@@ -197,7 +254,7 @@ int main()
     UART_1_Start();
   
     reflectance_start();
-    reflectance_set_threshold(9000, 9000, 11000, 11000, 9000, 9000); // set center sensor threshold to 11000 and others to 9000
+    reflectance_set_threshold(8000, 8000, 10000, 10000, 8000, 8000); // set center sensor threshold to 11000 and others to 9000
     
 
     for(;;)
@@ -210,8 +267,119 @@ int main()
         // when blackness value is over threshold the sensors reads 1, otherwise 0
         reflectance_digital(&dig);      //print out 0 or 1 according to results of reflectance period
         printf("%5d %5d %5d %5d %5d %5d \r\n", dig.l3, dig.l2, dig.l1, dig.r1, dig.r2, dig.r3);        //print out 0 or 1 according to results of reflectance period
+        CyDelay(0);
         
-        CyDelay(200);
+        motor_start();
+        
+         //dig.l3==0 && dig.l2==0 && dig.l1==0 && dig.r1==0 && dig.r2==0 && dig.r3==0
+        
+        //straight
+        if(dig.l1==1 && dig.r1==1)
+        {
+            motor_forward(225,0);
+           
+        }
+        //slight left turn
+        else if(dig.l1==1)
+        {
+            motor_turn(180,225,0);
+            BL = true;            
+        }
+        //slight right turn
+        else if(dig.r1==1)        
+        {
+            motor_turn(180,225,0);
+            BL = false;           
+        }
+        //left turn
+        else if(dig.l1==1 && dig.l2==1)
+        {
+            motor_turn(50,225,0);
+            BL = true;            
+        }
+        //right turn
+        else if(dig.r1==1 && dig.r2==1)
+        {
+            motor_turn(225,50,0);
+            BL = false;
+        }
+        //steep left turn
+        else if(dig.l2==1)
+        {
+            MotorDirLeft_Write(0);      // set LeftMotor forward mode
+            MotorDirRight_Write(0);     // set RightMotor forward mode
+            PWM_WriteCompare1(45); 
+            PWM_WriteCompare2(215);
+            BL = true;
+            
+        }
+        //steep right turn
+        else if(dig.r2==1)
+        {            
+            MotorDirLeft_Write(0);      // set LeftMotor forward mode
+            MotorDirRight_Write(0);     // set RightMotor forward mode
+            PWM_WriteCompare1(215); 
+            PWM_WriteCompare2(45);
+            BL = false;
+        }
+        //full left turn
+        else if(dig.l2==1 && dig.l3==1)
+        {
+            motor_turn(0,200,0);
+            BL = true;
+        }
+        //full right turn
+        else if(dig.r2==1 && dig.r3==1)
+        {
+            motor_turn(200,0,0); 
+            BL = false;
+        }
+        //turn on point left
+        else if(dig.l3==1)
+        {
+            MotorDirLeft_Write(0);      //set LeftMotor forward mode
+            MotorDirRight_Write(0);     // set RightMotor forward mode
+            PWM_WriteCompare1(10); 
+            PWM_WriteCompare2(225);
+            BL = true;
+        }
+        //turn on point right
+        else if(dig.r3==1)
+        {
+            MotorDirLeft_Write(0);      //set LeftMotor forward mode
+            MotorDirRight_Write(0);     // set RightMotor forward mode
+            PWM_WriteCompare1(225); 
+            PWM_WriteCompare2(10);    
+            BL = false;
+        }
+        //if all sensorts on white
+        else if(dig.l2==0 && dig.l1==0 && dig.r1==0 && dig.r2==0)
+        {
+            if(BL == true) // turn left
+            {
+                motor_turn(1,225,0);
+            }
+            else if(BL == false) // turn right
+            {
+                motor_turn(225,1,0); 
+            }
+            
+        }
+        if(dig.l2==1 && dig.l1==1 && dig.r1==1 && dig.r2==1)
+        {
+            motor_stop();
+        }
+    
+//       else if(dig.l1==1 && dig.r1==1 && dig.r2==1)
+//        {
+//            motor_turn(255,30,0);
+//        }
+//        else if(dig.l2==1 && dig.l1==1 && dig.r1==1 )
+//        {
+//            motor_turn(30,255,0);
+//        }
+        
+        
     }
 }   
 #endif
@@ -229,7 +397,7 @@ int main()
     motor_forward(100,2000);     // moving forward
     motor_turn(200,50,2000);     // turn
     motor_turn(50,200,2000);     // turn
-    motor_backward(100,2000);    // movinb backward
+    motor_backward(100,2000);    // moving backward
        
     motor_stop();               // motor stop
     
