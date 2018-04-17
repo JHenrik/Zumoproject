@@ -245,16 +245,30 @@ int sens()
     bool BL = true;
     struct sensors_ ref;
     struct sensors_ dig;
-    //int blackline = 10000;
     
-
+    //Different rates of blackline
+//    float l3=0, l2=0, l1=0, r1=0, r2=0, r3=0;
+//    
+//    l3 = ref.l3;  
+//    l2 = ref.l2;
+//    l1 = ref.l1;    
+//    r1 = ref.r1;    
+//    r2 = ref.r2;   
+//    r3 = ref.r3;
+//    
+//    int FullL = 15000;
+//    int halfL = 9000;
+//    
+    float Speed = 200;
+   
+    
     Systick_Start();
 
     CyGlobalIntEnable; 
     UART_1_Start();
   
     reflectance_start();
-    reflectance_set_threshold(8000, 8000, 10000, 10000, 8000, 8000); // set center sensor threshold to 11000 and others to 9000
+    reflectance_set_threshold(8000, 7000, 9000, 9000, 9000, 9000); // set center sensor threshold to 11000 and others to 9000
     
 
     for(;;)
@@ -269,115 +283,85 @@ int sens()
         printf("%5d %5d %5d %5d %5d %5d \r\n", dig.l3, dig.l2, dig.l1, dig.r1, dig.r2, dig.r3);        //print out 0 or 1 according to results of reflectance period
         CyDelay(0);
         
+        
         motor_start();
         
-         //dig.l3==0 && dig.l2==0 && dig.l1==0 && dig.r1==0 && dig.r2==0 && dig.r3==0
-        
-        //straight
-        if(dig.l1==1 && dig.r1==1)
+        if(ref.l1 > 15000 && ref.r1 > 15000)
         {
-            motor_forward(225,0);
-           
+        motor_forward(Speed*1.275,0);
         }
-        //slight left turn
-        else if(dig.l1==1)
+        else if(ref.l1 >= 15000)
         {
-            motor_turn(180,225,0);
-            BL = true;            
-        }
-        //slight right turn
-        else if(dig.r1==1)        
-        {
-            motor_turn(180,225,0);
-            BL = false;           
-        }
-        //left turn
-        else if(dig.l1==1 && dig.l2==1)
-        {
-            motor_turn(50,225,0);
-            BL = true;            
-        }
-        //right turn
-        else if(dig.r1==1 && dig.r2==1)
-        {
-            motor_turn(225,50,0);
+            motor_turn((Speed*1.275)/3,Speed*1.275,0);
             BL = false;
         }
-        //steep left turn
-        else if(dig.l2==1)
+//        else if (ref.l1 >= 15000 && ref.l2 >= 15000)
+//        {
+//            motor_turn((Speed*1.275)/5,Speed,0);
+//            BL = false;
+//        }
+        else if(ref.l2 >= 15000)
         {
-            MotorDirLeft_Write(0);      // set LeftMotor forward mode
-            MotorDirRight_Write(0);     // set RightMotor forward mode
-            PWM_WriteCompare1(45); 
-            PWM_WriteCompare2(215);
-            BL = true;
-            
-        }
-        //steep right turn
-        else if(dig.r2==1)
-        {            
-            MotorDirLeft_Write(0);      // set LeftMotor forward mode
-            MotorDirRight_Write(0);     // set RightMotor forward mode
-            PWM_WriteCompare1(215); 
-            PWM_WriteCompare2(45);
+            motor_turn((Speed*1.225)/4,Speed*1.225,0);
             BL = false;
         }
-        //full left turn
-        else if(dig.l2==1 && dig.l3==1)
+        else if(ref.l3 >= 15000)
         {
-            motor_turn(0,200,0);
+            motor_turn(Speed/7.5,Speed,0);
+            BL = false;
+        }
+        else if(ref.l3 <=15000 && dig.l3 == 1)
+        {
+            MotorDirLeft_Write(1);      
+            MotorDirRight_Write(0);     
+            PWM_WriteCompare1(Speed); 
+            PWM_WriteCompare2(Speed);
+            CyDelay(0);
+        }
+        else if(ref.r1 >= 15000)
+        {
+            motor_turn(Speed*1.275,(Speed*1.275)/3,0);
             BL = true;
         }
-        //full right turn
-        else if(dig.r2==1 && dig.r3==1)
+//        else if (ref.r1 >= 15000 && ref.r2 >= 15000)
+//        {
+//            motor_turn(Speed,(Speed*1.275)/5,0);
+//        }
+        else if(ref.r2 >= 15000)
         {
-            motor_turn(200,0,0); 
-            BL = false;
-        }
-        //turn on point left
-        else if(dig.l3==1)
-        {
-            MotorDirLeft_Write(0);      //set LeftMotor forward mode
-            MotorDirRight_Write(0);     // set RightMotor forward mode
-            PWM_WriteCompare1(10); 
-            PWM_WriteCompare2(225);
+            motor_turn(Speed*1.225,(Speed*1.225)/4,0);
             BL = true;
         }
-        //turn on point right
-        else if(dig.r3==1)
+        else if(ref.r3 >= 15000)
         {
-            MotorDirLeft_Write(0);      //set LeftMotor forward mode
-            MotorDirRight_Write(0);     // set RightMotor forward mode
-            PWM_WriteCompare1(225); 
-            PWM_WriteCompare2(10);    
-            BL = false;
+            motor_turn(Speed,Speed/7.5,0);
+            BL = true;
         }
-        //if all sensorts on white
-        else if(dig.l2==0 && dig.l1==0 && dig.r1==0 && dig.r2==0)
+        else if(ref.r3 <=15000 && dig.r3 == 1)
         {
-            if(BL == true) // turn left
+            MotorDirLeft_Write(0);      
+            MotorDirRight_Write(1);     
+            PWM_WriteCompare1(Speed); 
+            PWM_WriteCompare2(Speed);
+            CyDelay(0);
+        }
+         else if(dig.l3==0 && dig.l2==0 && dig.l1==0 && dig.r1==0 && dig.r2==0 && dig.r3==0)
+        {
+            if(BL == true) // turn 
             {
-                motor_turn(1,225,0);
+                motor_turn(Speed/Speed,Speed*1.275,0);
             }
             else if(BL == false) // turn right
             {
-                motor_turn(225,1,0); 
+                motor_turn(Speed,Speed/Speed*1.275,0); 
             }
-            
         }
-        if(dig.l2==1 && dig.l1==1 && dig.r1==1 && dig.r2==1)
-        {
+            if(dig.l2==1 && dig.l1==1 && dig.r1==1 && dig.r2==1)
+            {
             motor_stop();
-        }
-    
-//       else if(dig.l1==1 && dig.r1==1 && dig.r2==1)
-//        {
-//            motor_turn(255,30,0);
-//        }
-//        else if(dig.l2==1 && dig.l1==1 && dig.r1==1 )
-//        {
-//            motor_turn(30,255,0);
-//        }
+            
+            }
+        
         
         
     }

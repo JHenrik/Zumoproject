@@ -18,6 +18,7 @@ struct sensors_ {
     uint16_t r1;
     uint16_t r2;
     uint16_t r3;
+    
 };
 
 void reflectance_handler(void);
