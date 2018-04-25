@@ -14,7 +14,7 @@
 #define TUNE_H_
 #include "project.h"
 
-void Tune(uint32 length, uint16 pitch);
+void Tune(uint32 length, float pitch);
 
 #endif 
 

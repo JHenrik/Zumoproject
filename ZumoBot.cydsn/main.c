@@ -62,10 +62,22 @@ void zumo();
 void drivetoline();
 
 
-void startTune()
+void startTune() // play some nostalgic music from 2000
 {
-    
-    Tune(140,153);
+    Tune(140,100);
+    Tune(280,329.63);//E
+    Tune(140,292.66);//D
+    Tune(280,185.00);//F#
+    Tune(280,207.65);//G#
+    Tune(140,277.18);//C#
+    Tune(140,246.94);//B
+    Tune(280,146.83);//D
+    Tune(280,164.81);//E
+    Tune(140,246.94);//B
+    Tune(140,220.00);//A
+    Tune(280,138.59);//C#
+    Tune(280,164.81);//E
+    Tune(360,220.00);//A
     CyDelay(10);
     
 }
@@ -91,6 +103,7 @@ int main()
     const int VinRange = 5;
     const int codeRange = 4095;
     
+    startTune();
     printf("\nBoot\n");
     drivetoline();
     
@@ -103,8 +116,8 @@ int main()
     printf("Signal\n");
     
     
-    //drive();
-    zumo();
+    drive();
+//  zumo();
     
 
     
@@ -320,7 +333,7 @@ void drivetoline()
     reflectance_set_threshold(8000, 7000, 9000, 9000, 9000, 9000);
     CyDelay(2);
     uint8_t stopped =0;
-    printf("start to line\n");
+    
     motor_start();
     while(stopped==0)
     {
@@ -332,7 +345,7 @@ void drivetoline()
         {
             motor_stop();
             stopped =1;
-            printf("on start line\n");
+            
         }
     }
     
@@ -349,6 +362,7 @@ void zumo()
         printf("distance = %d\r\n", d);
         CyDelay(200);
     }
+    
 }
 int drive()
 {
@@ -441,32 +455,25 @@ int drive()
         }
          else if(dig.l3==0 && dig.l2==0 && dig.l1==0 && dig.r1==0 && dig.r2==0 && dig.r3==0)
         {
-            if(BL == true) // turn 
+            if(BL == true)  
             {
                 motor_turn(Speed/Speed,Speed,0);
             }
-            else if(BL == false) // turn right
+            else if(BL == false) 
             {
                 motor_turn(Speed,Speed/Speed,0); 
             }
         }
-            if(dig.l3==1 && dig.l2==1 && dig.l1==1 && dig.r1==1 && dig.r2==1 && dig.r3==1)
-            {
-                
-                blacklinecount++;
-                
-                //printf("BL: %d \n", blacklinecount);
-                
-                
-                if(blacklinecount > 3)
-                {
-                    
-                    motor_stop();
-                    
-                }
-                CyDelay(50);
-            }
+        if(dig.l3==1 && dig.l2==1 && dig.l1==1 && dig.r1==1 && dig.r2==1 && dig.r3==1)
+        {
+            blacklinecount++;
             
+            if(blacklinecount > 3)
+            {
+                motor_stop();
+            }
+            CyDelay(50);
+            }
     }
    exit(0);
 }   

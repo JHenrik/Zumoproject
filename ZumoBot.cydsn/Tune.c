@@ -12,8 +12,9 @@
 
 #include "Tune.h"
 
-void Tune(uint32 length, uint16 pitch)
+void Tune(uint32 length, float note)
 {
+    uint16 pitch =  100000 / note;
     uint16 cmp = pitch / 2;
     Buzzer_PWM_Start();
     Buzzer_PWM_WriteCompare(cmp);
