@@ -103,7 +103,7 @@ int main()
     const int VinRange = 5;
     const int codeRange = 4095;
     
-    startTune();
+//    startTune();
     printf("\nBoot\n");
     drivetoline();
     
@@ -379,15 +379,14 @@ int drive()
     UART_1_Start();
   
     reflectance_start();
-    reflectance_set_threshold(8000, 7000, 9000, 9000, 9000, 9000); // set center sensor threshold to 11000 and others to 9000
+    reflectance_set_threshold(9000, 9000, 9000, 9000, 9000, 9000); // set center sensor threshold to 11000 and others to 9000
     CyDelay(1);
     
     int blacklinecount = 0;
-    //printf("Si1231231gnal\n");
     motor_forward(200,1000);
     while(blacklinecount < 4)
     {
-       // printf("Si12312513634623462gnal\n");
+       
         // read raw sensor values
         reflectance_read(&ref);
         //printf("%5d %5d %5d %5d %5d %5d\r\n", ref.l3, ref.l2, ref.l1, ref.r1, ref.r2, ref.r3);       // print out each period of reflectance sensors
@@ -401,57 +400,67 @@ int drive()
         
         motor_start();
        
-        if(ref.l1 > 15000 && ref.r1 > 15000)
+        if(ref.l1 > 15000 && ref.r1 > 15000) // if the blackline covers both middle sensors 
         {
-            motor_forward(255,0);
+            motor_forward(255,0); //forward with full speed
         }
-        else if(ref.l1 >= 15000)
+        else if(ref.l1 >= 15000) // if the blackline cover the left 1st sensor
         {
-            motor_turn(255/3,255,0);
+            motor_turn(255/3,255,0); // turn with a radius 1:3 to left
             BL = false;
         }
 
-        else if(ref.l2 >= 15000)
+        else if(ref.l2 >= 15000) // if the blackline covers the left 2nd sensor
         {
-            motor_turn(255/4,255,0);
+            motor_turn(255/4,255,0); // turn with a radius of 1:4 to left
             BL = false;
         }
-        else if(ref.l3 >= 15000)
+        else if(ref.l3 >= 15000) // if the blackline covers the left 3rd sensor
         {
-            motor_turn(Speed/7.5,Speed,0);
+            MotorDirLeft_Write(1);      //left motor goes backwards
+            MotorDirRight_Write(0);     //right motor goes forwards
+            PWM_WriteCompare1(255/4);     //full speed
+            PWM_WriteCompare2(255); 
+            
+//            motor_turn(Speed/7.5,Speed,0); // turn with a radius of 1:7.5 to left
             BL = false;
         }
-        else if(ref.l3 <=15000 && dig.l3 == 1)
+        else if(ref.l3 <=15000 && dig.l3 == 1) // if the blackline covers 1/2 of the left 3rd sensor
         {
-            MotorDirLeft_Write(1);      
-            MotorDirRight_Write(0);     
-            PWM_WriteCompare1(255); 
-            PWM_WriteCompare2(255);
-            CyDelay(0);
+            //make a turn on point 
+            MotorDirLeft_Write(1);      //left motor goes backwards
+            MotorDirRight_Write(0);     //right motor goes forwards
+            PWM_WriteCompare1(255);     //full speed
+            PWM_WriteCompare2(255);     //full speed
         }
-        else if(ref.r1 >= 15000)
+        else if(ref.r1 >= 15000 ) // if the blackline cover the right 1st sensor
         {
-            motor_turn(255,255/3,0);
+            motor_turn(255,255/3,0);    // turn with a radius of 3:1
             BL = true;
         }
 
-        else if(ref.r2 >= 15000)
+        else if(ref.r2 >= 15000) // if the blackline cover the right 2nd sensor
         {
-            motor_turn(255,255/4,0);
+            motor_turn(255,255/4,0);    // turn with a radius of 4:1
             BL = true;
         }
-        else if(ref.r3 >= 15000)
+        else if(ref.r3 >= 15000) // if the blackline cover the right 3rd sensor
         {
-            motor_turn(Speed,Speed/7.5,0);
+            MotorDirLeft_Write(0);      //left goes forward     
+            MotorDirRight_Write(1);     //right goes backwards     
+            PWM_WriteCompare1(255);     //full speed
+            PWM_WriteCompare2(255/4);   
+            
+//            motor_turn(Speed,Speed/7.5,0);  // turn with a radius of 7.5:1
             BL = true;
         }
-        else if(ref.r3 <=15000 && dig.r3 == 1)
+        else if(ref.r3 <=15000 && dig.r3 == 1) // if the blackline covers 1/2 of the right 3rd sensor
         {
-            MotorDirLeft_Write(0);      
-            MotorDirRight_Write(1);     
-            PWM_WriteCompare1(255); 
-            PWM_WriteCompare2(255);
-            CyDelay(0);
+            //make a turn on point 
+            MotorDirLeft_Write(0);      //left goes forward     
+            MotorDirRight_Write(1);     //right goes backwards     
+            PWM_WriteCompare1(255);     //full speed
+            PWM_WriteCompare2(255);     //full speed
         }
          else if(dig.l3==0 && dig.l2==0 && dig.l1==0 && dig.r1==0 && dig.r2==0 && dig.r3==0)
         {
