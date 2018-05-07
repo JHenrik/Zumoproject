@@ -1,34 +1,3 @@
-/**
-* @mainpage ZumoBot Project
-* @brief    You can make your own ZumoBot with various sensors.
-* @details  <br><br>
-    <p>
-    <B>General</B><br>
-    You will use Pololu Zumo Shields for your robot project with CY8CKIT-059(PSoC 5LP) from Cypress semiconductor.This 
-    library has basic methods of various sensors and communications so that you can make what you want with them. <br> 
-    <br><br>
-    </p>
-    
-    <p>
-    <B>Sensors</B><br>
-    &nbsp;Included: <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;LSM303D: Accelerometer & Magnetometer<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;L3GD20H: Gyroscope<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;Reflectance sensor<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;Motors
-    &nbsp;Wii nunchuck<br>
-    &nbsp;TSOP-2236: IR Receiver<br>
-    &nbsp;HC-SR04: Ultrasonic sensor<br>
-    &nbsp;APDS-9301: Ambient light sensor<br>
-    &nbsp;IR LED <br><br><br>
-    </p>
-    
-    <p>
-    <B>Communication</B><br>
-    I2C, UART, Serial<br>
-    </p>
-*/
-
 #include <project.h>
 #include <stdio.h>
 #include "Systick.h"
@@ -63,62 +32,58 @@ void sumomaneuver(int direction, uint32 delay);
 void drivetoline();
 void BatteryStatus();
 
-
-
 void startTune() // play theme 
 {
     Tune(140,100);
-    Tune(280,329.63);//E
-    Tune(140,292.66);//D
-    Tune(280,185.00);//F#
-    Tune(280,207.65);//G#
-    Tune(140,277.18);//C#
-    Tune(140,246.94);//B
-    Tune(280,146.83);//D
-    Tune(280,164.81);//E
-    Tune(140,246.94);//B
-    Tune(140,220.00);//A
-    Tune(280,138.59);//C#
-    Tune(280,164.81);//E
-    Tune(360,220.00);//A
+    Tune(280,329.63); //E
+    Tune(140,292.66); //D
+    Tune(280,185.00); //F#
+    Tune(280,207.65); //G#
+    Tune(140,277.18); //C#
+    Tune(140,246.94); //B
+    Tune(280,146.83); //D
+    Tune(280,164.81); //E
+    Tune(140,246.94); //B
+    Tune(140,220.00); //A
+    Tune(280,138.59); //C#
+    Tune(280,164.81); //E
+    Tune(360,220.00); //A
     CyDelay(10);
     
-}
-
-
-
- 
+} 
 
 #if 1
 //battery level//
 int main()
 {
     
-
     CyGlobalIntEnable; 
     UART_1_Start();
     Systick_Start();    
    
 //    startTune();
-    printf("\nBoot\n");
+   
     drivetoline();
-    
-    printf("end of drivetoline\n");
+       
     IR_Start();
     
     IR_flush();
-    printf("Flush\n");
+    
     IR_wait();
-    printf("Signal\n");
     
     
-    drive();
-/* ========= Used for Sumo Wrestling ==============*/
+//// ========= Used for Line Follower ==============//
+//    
+//    drive();
+//    
+////================================================= //
+    
+    
+// ========= Used for Sumo Wrestling ==============//
     //Move the robot to the middle of the ring
     motor_start();
     motor_forward(150,550);
     motor_forward(0,0);
-    //printf("In the ring \n");
     
     sumo(); //Start the sumo function
     
@@ -224,12 +189,9 @@ void drivetoline()
 {
     
     struct sensors_ dig;
-    Systick_Start();
-    CyGlobalIntEnable; 
-    UART_1_Start();
     reflectance_start();
     reflectance_set_threshold(8000, 7000, 9000, 9000, 9000, 9000);
-    CyDelay(2);
+    CyDelay(1);
     uint8_t stopped =0;
     
     motor_start();
@@ -237,22 +199,19 @@ void drivetoline()
     {
         
         motor_forward(50,0);
-        //printf("moving to line\n");
-    reflectance_digital(&dig);
-        if(dig.l3==1 && dig.l2==1 && dig.l1==1 && dig.r1==1 && dig.r2==1 && dig.r3==1)
-        {
-            motor_stop();
-            stopped =1;
-            
-        }
+        reflectance_digital(&dig);
+        
+            if(dig.l3==1 && dig.l2==1 && dig.l1==1 && dig.r1==1 && dig.r2==1 && dig.r3==1) // all sensors are on black
+            {
+                motor_stop(); // robot stops moving
+                stopped =1; // set stopped to 1 to exit loop
+            }
     }
-    
  }
+
+
 void sumo()
 {
-    CyGlobalIntEnable; 
-    UART_1_Start();
-    Systick_Start();
     Ultra_Start();  // Ultra Sonic Start function
     
     //Start the sensors
@@ -466,7 +425,7 @@ void BatteryStatus()
 int drive()
 {
   
-    bool BL = true;
+    bool BL = true; // fail save in case robot gets lost it know whcih direction to turn
     struct sensors_ ref;
     struct sensors_ dig;
     float Speed = 230;
@@ -481,21 +440,12 @@ int drive()
     reflectance_set_threshold(9000, 9000, 9000, 9000, 9000, 9000); // set center sensor threshold to 11000 and others to 9000
     CyDelay(1);
     
-    int blacklinecount = 0;
-    motor_forward(200,1000);
-    while(blacklinecount < 4)
+    int blacklinecount = 0; //for stopping on the second line
+    while(blacklinecount < 4) //to quit the loop
     {
-        BatteryStatus(); // check the battery status
+        //BatteryStatus(); // check the battery status
         reflectance_read(&ref);
-        //printf("%5d %5d %5d %5d %5d %5d\r\n", ref.l3, ref.l2, ref.l1, ref.r1, ref.r2, ref.r3);       
-        
-        
         reflectance_digital(&dig);
-        //printf("%5d %5d %5d %5d %5d %5d \r\n", dig.l3, dig.l2, dig.l1, dig.r1, dig.r2, dig.r3);       
-        
-        CyDelay(0);
-        
-        
         motor_start();
        
         if(ref.l1 > 15000 && ref.r1 > 15000) // if the blackline covers both middle sensors 
@@ -505,13 +455,13 @@ int drive()
         else if(ref.l1 >= 15000) // if the blackline cover the left 1st sensor
         {
             motor_turn(255/3,255,0); // turn with a radius 1:3 to left
-            BL = false;
+            BL = false; // set BL to false meaning the line has been on the right side of the robot 
         }
 
         else if(ref.l2 >= 15000) // if the blackline covers the left 2nd sensor
         {
             motor_turn(255/4,255,0); // turn with a radius of 1:4 to left
-            BL = false;
+            BL = false; // set BL to false meaning the line has been on the right side of the robot  
         }
         else if(ref.l3 >= 15000) // if the blackline covers the left 3rd sensor
         {
@@ -520,11 +470,10 @@ int drive()
             PWM_WriteCompare1(255/4);     //full speed
             PWM_WriteCompare2(255); 
             
-            BL = false;
+            BL = false; // set BL to false meaning the line has been on the right side of the robot
         }
         else if(ref.l3 <=15000 && dig.l3 == 1) // if the blackline covers 1/2 of the left 3rd sensor
         {
-            //make a turn on point 
             MotorDirLeft_Write(1);      //left motor goes backwards
             MotorDirRight_Write(0);     //right motor goes forwards
             PWM_WriteCompare1(255);     //full speed
@@ -533,13 +482,13 @@ int drive()
         else if(ref.r1 >= 15000 ) // if the blackline cover the right 1st sensor
         {
             motor_turn(255,255/3,0);    // turn with a radius of 3:1
-            BL = true;
+            BL = true; // set BL to false meaning the line has been on the left side of the robot
         }
 
         else if(ref.r2 >= 15000) // if the blackline cover the right 2nd sensor
         {
             motor_turn(255,255/4,0);    // turn with a radius of 4:1
-            BL = true;
+            BL = true; // set BL to false meaning the line has been on the left side of the robot
         }
         else if(ref.r3 >= 15000) // if the blackline cover the right 3rd sensor
         {
@@ -548,7 +497,7 @@ int drive()
             PWM_WriteCompare1(255);     //full speed
             PWM_WriteCompare2(255/4);   
            
-            BL = true;
+            BL = true; // set BL to false meaning the line has been on the left side of the robot
         }
         else if(ref.r3 <=15000 && dig.r3 == 1) // if the blackline covers 1/2 of the right 3rd sensor
         {
@@ -558,29 +507,29 @@ int drive()
             PWM_WriteCompare1(255);     //full speed
             PWM_WriteCompare2(255);     //full speed
         }
-         else if(dig.l3==0 && dig.l2==0 && dig.l1==0 && dig.r1==0 && dig.r2==0 && dig.r3==0)
+         else if(dig.l3==0 && dig.l2==0 && dig.l1==0 && dig.r1==0 && dig.r2==0 && dig.r3==0) // all sensors see white 
         {
-            if(BL == true)  
+            if(BL == true)  // if BL was true the last time it was turning
             {
-                motor_turn(Speed/Speed,Speed,0);
+                motor_turn(Speed/Speed,Speed,0); // it turns to the right 
             }
-            else if(BL == false) 
+            else if(BL == false) // if BL was false last time it was turning
             {
-                motor_turn(Speed,Speed/Speed,0); 
+                motor_turn(Speed,Speed/Speed,0); // it turns to the left
             }
         }
-        if(dig.l3==1 && dig.l2==1 && dig.l1==1 && dig.r1==1 && dig.r2==1 && dig.r3==1)
+        if(dig.l3==1 && dig.l2==1 && dig.l1==1 && dig.r1==1 && dig.r2==1 && dig.r3==1) // all sensors are black
         {
-            blacklinecount++;
+            blacklinecount++; // add 1 to blackline count 
             
-            if(blacklinecount > 3)
+            if(blacklinecount > 3) // when blackline count is 3 or more
             {
-                motor_stop();
+                motor_stop(); // stops the robot
             }
             CyDelay(50);
             }
     }
-   exit(0);
+   exit(0); // fail save 
 }   
 
 #endif
